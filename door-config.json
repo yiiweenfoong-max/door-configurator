@@ -1,15 +1,13 @@
 {
   "laminateList": [
-    "blob:https://cdpn.io/025adcab-215b-4884-bd35-4b6caca2107c",
-    "blob:https://cdpn.io/e0dad3f7-2c76-4627-8f59-5adca340a7c6",
-    "blob:https://cdpn.io/053dc452-c1e2-4f68-acde-6ea4941a8068",
-    "blob:https://cdpn.io/69f62422-68a7-4175-9880-4f5b3c4f974b"
+    "uploads/laminate1.jpg",
+    "uploads/laminate2.jpg",
+    "uploads/laminate3.jpg"
   ],
   "lockList": [
-    "blob:https://cdpn.io/a515b83d-3a11-4627-a965-e304ea9aaefa",
-    "blob:https://cdpn.io/6c7cc732-4058-44e7-a025-08590644f9c5",
-    "blob:https://cdpn.io/39d005d2-ec23-4ce4-a893-0d3ec16dcc7d"
+    "uploads/lock1.png",
+    "uploads/lock2.png"
   ],
-  "laminateSelected": "blob:https://cdpn.io/053dc452-c1e2-4f68-acde-6ea4941a8068",
-  "lockSelected": "blob:https://cdpn.io/39d005d2-ec23-4ce4-a893-0d3ec16dcc7d"
+  "laminateSelected": "uploads/laminate2.jpg",
+  "lockSelected": "uploads/lock2.png"
 }
