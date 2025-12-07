@@ -84,6 +84,11 @@ body {
 </div>
 
 <div class="controls">
+
+    <div class="section-title">门框颜色</div>
+    <label for="frameColor">选择门框颜色:</label>
+    <input type="color" id="frameColor" value="#333333">
+
     <div class="section-title">Laminate</div>
     <input type="file" id="laminateUpload" accept="image/*" multiple>
     <div id="laminateThumbs" class="thumbnails-container"></div>
@@ -109,6 +114,18 @@ const laminateImg = document.getElementById("laminate");
 const lockImg = document.getElementById("lock");
 const laminateThumbs = document.getElementById("laminateThumbs");
 const lockThumbs = document.getElementById("lockThumbs");
+const door = document.getElementById("door");
+const frameInput = document.getElementById("frameColor");
+
+// -------------------------
+// 动态改变门框颜色
+// -------------------------
+frameInput.addEventListener('input', () => {
+    const color = frameInput.value;
+    door.style.borderTopColor = color;
+    door.style.borderLeftColor = color;
+    door.style.borderRightColor = color;
+});
 
 // -------------------------
 // 自动加载 JSON
@@ -213,33 +230,7 @@ document.getElementById("lockUpload").addEventListener("change", e => {
 
 // -------------------------
 // 保存 JSON
-// -------------------------
-document.getElementById("saveJson").onclick = () => {
-    const data = {
-        laminateList,
-        lockList,
-        laminateSelected,
-        lockSelected
-    };
-
-    const blob = new Blob([JSON.stringify(data, null, 2)], {
-        type: "application/json"
-    });
-
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "door-config.json";
-    a.click();
-};
-
-// -------------------------
-// 自动启动：加载 JSON
-// -------------------------
-loadJson();
-
-</script>
-</body>
-</html>
+// ----
     
   </body>
   
