@@ -130,7 +130,7 @@ frameInput.addEventListener('input', () => {
 // -------------------------
 // 自动加载 JSON
 // -------------------------
-const jsonUrl = "door-config.json";   // JSON 和 HTML 在同目录即可自动读取
+const jsonUrl = "door-config.json";
 
 async function loadJson() {
     try {
@@ -141,43 +141,35 @@ async function loadJson() {
         }
         const data = await res.json();
 
-        // 恢复数据
         laminateList = data.laminateList || [];
         lockList = data.lockList || [];
         laminateSelected = data.laminateSelected || "";
         lockSelected = data.lockSelected || "";
 
-        // 生成缩略图
         laminateList.forEach(url => addThumbnail(url, "laminate"));
         lockList.forEach(url => addThumbnail(url, "lock"));
 
-        // 显示选中的 laminate
         if (laminateSelected) {
             laminateImg.src = laminateSelected;
             highlightSelected(laminateSelected, laminateThumbs);
         }
-
-        // 显示选中的 lock
         if (lockSelected) {
             lockImg.src = lockSelected;
             highlightSelected(lockSelected, lockThumbs);
         }
-
         console.log("JSON 加载成功");
-
     } catch (err) {
         console.log("加载 JSON 失败：", err);
     }
 }
 
 // -------------------------
-// 添加缩略图函数
+// 添加缩略图
 // -------------------------
 function addThumbnail(url, type) {
     const img = document.createElement("img");
     img.src = url;
     img.className = "thumbnail";
-
     img.onclick = () => {
         if (type === "laminate") {
             laminateSelected = url;
@@ -189,12 +181,8 @@ function addThumbnail(url, type) {
             highlightSelected(url, lockThumbs);
         }
     };
-
-    if (type === "laminate") {
-        laminateThumbs.appendChild(img);
-    } else {
-        lockThumbs.appendChild(img);
-    }
+    if (type === "laminate") laminateThumbs.appendChild(img);
+    else lockThumbs.appendChild(img);
 }
 
 // -------------------------
@@ -230,7 +218,28 @@ document.getElementById("lockUpload").addEventListener("change", e => {
 
 // -------------------------
 // 保存 JSON
-// ----
+// -------------------------
+document.getElementById("saveJson").onclick = () => {
+    const data = {
+        laminateList,
+        lockList,
+        laminateSelected,
+        lockSelected
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "door-config.json";
+    a.click();
+};
+
+// -------------------------
+// 自动加载 JSON
+// -------------------------
+loadJson();
+</script>
+</body>
+</html>
     
   </body>
   
