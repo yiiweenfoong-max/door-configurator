@@ -14,201 +14,230 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Door Configurator</title>
+<title>Door Configurator (Auto JSON Load)</title>
 <style>
-  body {
+body {
     font-family: Arial, sans-serif;
     display: flex;
     padding: 20px;
     gap: 40px;
-  }
-  .door-preview {
+}
+.door-preview {
     position: relative;
     width: 300px;
     height: 700px;
     border-top: 22px solid #333;
     border-left: 16px solid #333;
     border-right: 16px solid #333;
+    border-bottom: none;
     background-color: #fff;
     box-sizing: border-box;
-  }
-  .laminate {
+}
+.laminate, .lock {
     position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background-size: cover;
-    z-index: 1;
-  }
-  .lock {
-    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.lock {
     width: auto;
     height: 100px;
-    object-fit: contain;
-    left: 0;
     top: 50%;
     transform: translateY(-50%);
     z-index: 2;
-  }
-  .controls label, .controls input, .controls select, .controls button {
+}
+.controls {
+    flex: 1;
+}
+.controls label, .controls input, .controls select, .controls button {
     display: block;
     margin-bottom: 10px;
-  }
-  .thumbnail-container {
-    display: flex;
-    gap: 10px;
-    margin-top: 5px;
-    flex-wrap: wrap;
-  }
-  .thumbnail-container img {
+}
+.section-title {
+    font-weight: bold;
+    margin-top: 20px;
+}
+.thumbnail {
     width: 50px;
     height: 50px;
     object-fit: cover;
+    margin: 3px;
     cursor: pointer;
-    border: 2px solid transparent;
-  }
-  .thumbnail-container img.selected {
-    border-color: red;
-  }
+    border: 1px solid #ccc;
+}
+.thumbnail.selected {
+    border: 2px solid blue;
+}
+.thumbnails-container {
+    display: flex;
+    flex-wrap: wrap;
+}
 </style>
 </head>
 <body>
 
 <div class="door-preview" id="door">
-  <div class="laminate" id="laminate"></div>
-  <img src="" id="lock" class="lock" alt="lock">
+    <img id="laminate" class="laminate" src="" alt="Laminate">
+    <img id="lock" class="lock" src="" alt="Lock">
 </div>
 
 <div class="controls">
-  <label for="frameColor">门框颜色:</label>
-  <input type="color" id="frameColor" value="#333333">
+    <div class="section-title">Laminate</div>
+    <input type="file" id="laminateUpload" accept="image/*" multiple>
+    <div id="laminateThumbs" class="thumbnails-container"></div>
 
-  <div class="section-title">Laminate 设置</div>
-  <label for="laminateUpload">上传 Laminate 图片:</label>
-  <input type="file" id="laminateUpload" accept="image/*" multiple>
-  <div class="thumbnail-container" id="laminateThumbnails"></div>
+    <div class="section-title">Lock</div>
+    <input type="file" id="lockUpload" accept="image/*" multiple>
+    <div id="lockThumbs" class="thumbnails-container"></div>
 
-  <div class="section-title">锁 设置</div>
-  <label for="lockUpload">上传锁图片:</label>
-  <input type="file" id="lockUpload" accept="image/*" multiple>
-  <div class="thumbnail-container" id="lockThumbnails"></div>
-
-  <button id="exportBtn">导出配置 JSON</button>
-  <input type="file" id="importFile" accept=".json">
+    <button id="saveJson">保存 JSON</button>
 </div>
 
 <script>
-const laminateContainer = document.getElementById('laminateThumbnails');
-const lockContainer = document.getElementById('lockThumbnails');
-const laminateDiv = document.getElementById('laminate');
-const lockImg = document.getElementById('lock');
-const frameColorInput = document.getElementById('frameColor');
+// -------------------------
+// 全局变量
+// -------------------------
+let laminateList = [];
+let lockList = [];
+let laminateSelected = "";
+let lockSelected = "";
 
-// 改变门框颜色
-frameColorInput.addEventListener('input', () => {
-  document.getElementById('door').style.borderColor = frameColorInput.value;
-});
+// 元素
+const laminateImg = document.getElementById("laminate");
+const lockImg = document.getElementById("lock");
+const laminateThumbs = document.getElementById("laminateThumbs");
+const lockThumbs = document.getElementById("lockThumbs");
 
+// -------------------------
+// 自动加载 JSON
+// -------------------------
+const jsonUrl = "door-config.json";   // JSON 和 HTML 在同目录即可自动读取
+
+async function loadJson() {
+    try {
+        const res = await fetch(jsonUrl);
+        if (!res.ok) {
+            console.log("暂无 JSON（第一次使用）");
+            return;
+        }
+        const data = await res.json();
+
+        // 恢复数据
+        laminateList = data.laminateList || [];
+        lockList = data.lockList || [];
+        laminateSelected = data.laminateSelected || "";
+        lockSelected = data.lockSelected || "";
+
+        // 生成缩略图
+        laminateList.forEach(url => addThumbnail(url, "laminate"));
+        lockList.forEach(url => addThumbnail(url, "lock"));
+
+        // 显示选中的 laminate
+        if (laminateSelected) {
+            laminateImg.src = laminateSelected;
+            highlightSelected(laminateSelected, laminateThumbs);
+        }
+
+        // 显示选中的 lock
+        if (lockSelected) {
+            lockImg.src = lockSelected;
+            highlightSelected(lockSelected, lockThumbs);
+        }
+
+        console.log("JSON 加载成功");
+
+    } catch (err) {
+        console.log("加载 JSON 失败：", err);
+    }
+}
+
+// -------------------------
+// 添加缩略图函数
+// -------------------------
+function addThumbnail(url, type) {
+    const img = document.createElement("img");
+    img.src = url;
+    img.className = "thumbnail";
+
+    img.onclick = () => {
+        if (type === "laminate") {
+            laminateSelected = url;
+            laminateImg.src = url;
+            highlightSelected(url, laminateThumbs);
+        } else {
+            lockSelected = url;
+            lockImg.src = url;
+            highlightSelected(url, lockThumbs);
+        }
+    };
+
+    if (type === "laminate") {
+        laminateThumbs.appendChild(img);
+    } else {
+        lockThumbs.appendChild(img);
+    }
+}
+
+// -------------------------
+// 高亮选择
+// -------------------------
+function highlightSelected(url, container) {
+    container.querySelectorAll("img").forEach(img => {
+        img.classList.toggle("selected", img.src === url);
+    });
+}
+
+// -------------------------
 // 上传 laminate
-document.getElementById('laminateUpload').addEventListener('change', (e) => {
-  Array.from(e.target.files).forEach(file => {
-    const reader = new FileReader();
-    reader.onload = ev => {
-      const img = document.createElement('img');
-      img.src = ev.target.result;
-      img.addEventListener('click', () => {
-        laminateDiv.style.backgroundImage = `url(${img.src})`;
-        laminateContainer.querySelectorAll('img').forEach(i => i.classList.remove('selected'));
-        img.classList.add('selected');
-      });
-      laminateContainer.appendChild(img);
-    };
-    reader.readAsDataURL(file);
-  });
-});
-
-// 上传锁
-document.getElementById('lockUpload').addEventListener('change', (e) => {
-  Array.from(e.target.files).forEach(file => {
-    const reader = new FileReader();
-    reader.onload = ev => {
-      const img = document.createElement('img');
-      img.src = ev.target.result;
-      img.addEventListener('click', () => {
-        lockImg.src = img.src;
-        lockContainer.querySelectorAll('img').forEach(i => i.classList.remove('selected'));
-        img.classList.add('selected');
-      });
-      lockContainer.appendChild(img);
-    };
-    reader.readAsDataURL(file);
-  });
-});
-
-// 导出 JSON
-document.getElementById('exportBtn').addEventListener('click', () => {
-  const config = {
-    frameColor: frameColorInput.value,
-    laminateList: Array.from(laminateContainer.querySelectorAll('img')).map(i => i.src),
-    laminateSelected: laminateContainer.querySelector('img.selected')?.src || '',
-    lockList: Array.from(lockContainer.querySelectorAll('img')).map(i => i.src),
-    lockSelected: lockContainer.querySelector('img.selected')?.src || '',
-    lockHeight: lockImg.height,
-    lockLeft: lockImg.offsetLeft,
-    lockTop: lockImg.offsetTop
-  };
-  const blob = new Blob([JSON.stringify(config)], {type: 'application/json'});
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = 'door-config.json';
-  link.click();
-});
-
-// 导入 JSON
-document.getElementById('importFile').addEventListener('change', (e) => {
-  const reader = new FileReader();
-  reader.onload = () => {
-    const config = JSON.parse(reader.result);
-
-    frameColorInput.value = config.frameColor;
-    document.getElementById('door').style.borderColor = config.frameColor;
-
-    // 恢复 laminate 缩略图
-    laminateContainer.innerHTML = '';
-    config.laminateList.forEach(src => {
-      const img = document.createElement('img');
-      img.src = src;
-      img.addEventListener('click', () => {
-        laminateDiv.style.backgroundImage = `url(${img.src})`;
-        laminateContainer.querySelectorAll('img').forEach(i => i.classList.remove('selected'));
-        img.classList.add('selected');
-      });
-      if (src === config.laminateSelected) img.classList.add('selected');
-      laminateContainer.appendChild(img);
+// -------------------------
+document.getElementById("laminateUpload").addEventListener("change", e => {
+    [...e.target.files].forEach(file => {
+        const url = URL.createObjectURL(file);
+        laminateList.push(url);
+        addThumbnail(url, "laminate");
     });
-    laminateDiv.style.backgroundImage = config.laminateSelected ? `url(${config.laminateSelected})` : '';
-
-    // 恢复锁缩略图
-    lockContainer.innerHTML = '';
-    config.lockList.forEach(src => {
-      const img = document.createElement('img');
-      img.src = src;
-      img.addEventListener('click', () => {
-        lockImg.src = img.src;
-        lockContainer.querySelectorAll('img').forEach(i => i.classList.remove('selected'));
-        img.classList.add('selected');
-      });
-      if (src === config.lockSelected) img.classList.add('selected');
-      lockContainer.appendChild(img);
-    });
-    lockImg.src = config.lockSelected || '';
-    lockImg.style.height = config.lockHeight + 'px';
-    lockImg.style.left = config.lockLeft + 'px';
-    lockImg.style.top = config.lockTop + 'px';
-  };
-  reader.readAsText(e.target.files[0]);
 });
+
+// -------------------------
+// 上传 lock
+// -------------------------
+document.getElementById("lockUpload").addEventListener("change", e => {
+    [...e.target.files].forEach(file => {
+        const url = URL.createObjectURL(file);
+        lockList.push(url);
+        addThumbnail(url, "lock");
+    });
+});
+
+// -------------------------
+// 保存 JSON
+// -------------------------
+document.getElementById("saveJson").onclick = () => {
+    const data = {
+        laminateList,
+        lockList,
+        laminateSelected,
+        lockSelected
+    };
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+        type: "application/json"
+    });
+
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "door-config.json";
+    a.click();
+};
+
+// -------------------------
+// 自动启动：加载 JSON
+// -------------------------
+loadJson();
+
 </script>
-
 </body>
 </html>
     
