@@ -1,13 +1,14 @@
 {
   "laminateList": [
-    "uploads/laminate1.jpg",
-    "uploads/laminate2.jpg",
-    "uploads/laminate3.jpg"
+    "uploads/CWZ6399 Honey Wajan.png",
+    "uploads/CBY9644 Virtual Cube.png",
+    "uploads/CB338-Valencia-Oak_02.02.24v3.jpg"
   ],
   "lockList": [
-    "uploads/lock1.png",
-    "uploads/lock2.png"
+    "uploads/M14 Main Door.png",
+    "uploads/Mortise Lock - Black.png"
+    "uploads/Mortise Lock - Silver.png"
   ],
-  "laminateSelected": "uploads/laminate2.jpg",
-  "lockSelected": "uploads/lock2.png"
+  "laminateSelected": "uploads/CWZ6399 Honey Wajan.png",
+  "lockSelected": "uploads/Mortise Lock - Black.png"
 }
